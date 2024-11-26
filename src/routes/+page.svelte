@@ -4,8 +4,9 @@
   import TrackList from "../lib/components/TrackList.svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Pagination from "$lib/components/ui/pagination";
+  import * as Card from "$lib/components/ui/card/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
 
-  // Interfaces for type definitions
   interface Track {
     id: number;
     label: string;
@@ -22,29 +23,24 @@
   interface Song {
     title: string;
     year: string;
-    songs: string[]; // Array of song URLs
+    songs: string[];
   }
 
-  // Reactive variables
   let tracks: Track[] = [];
   let songInfo: SongInfo | null = null;
-  let database: Song[] = []; // Explicitly typed as an array of Song objects
-  let userGuess = ""; // User's input for guessing the song
-  let suggestions: string[] = []; // Suggestions for the input box
-  let feedbackMessage = ""; // Feedback for the user
+  let database: Song[] = [];
+  let userGuess = "";
+  let suggestions: string[] = [];
+  let feedbackMessage = "";
 
-  // Pagination-specific variables
-  const perPage = 1; // Number of songs per page
-  const count = 100; // Total number of pages (assumes `database` contains songs)
-  let currentPage = 1; // Start with the first page
+  const perPage = 1;
+  let currentPage = 1;
 
-  // Lifecycle method to fetch songs and load the first song
   onMount(async () => {
     await fetchSongs();
-    loadSong(currentPage - 1); // Zero-based index for the current page
+    loadSong(currentPage - 1);
   });
 
-  // Fetch song data from the backend
   async function fetchSongs() {
     try {
       const response = await fetch("http://localhost:3000/api/songs");
@@ -54,7 +50,6 @@
     }
   }
 
-  // Load the current song based on the index
   function loadSong(index: number) {
     if (index < database.length) {
       const song = database[index];
@@ -70,29 +65,24 @@
         views: "185M",
         difficulty: "Hard (par 4)",
       };
-      feedbackMessage = ""; // Clear feedback when loading a new song
-      userGuess = ""; // Clear input field
-      suggestions = []; // Clear suggestions
+      feedbackMessage = "";
+      userGuess = "";
+      suggestions = [];
     }
   }
 
-  // Handle user input for guessing
   function handleInput(event: Event) {
     const input = (event.target as HTMLInputElement).value;
     userGuess = input;
-
-    // Generate suggestions dynamically based on input
     suggestions = database
       .map((song) => song.title)
       .filter((title) => title.toLowerCase().includes(input.toLowerCase()));
 
-    // Show suggestions only if there's input
     if (input === "") {
       suggestions = [];
     }
   }
 
-  // Check the user's guess
   function handleGuess() {
     if (userGuess.trim().toLowerCase() === songInfo?.title.toLowerCase()) {
       feedbackMessage = "🎉 You got it!";
@@ -101,109 +91,111 @@
     }
   }
 
-  // Handle suggestion click to auto-fill input
   function handleSuggestionClick(suggestion: string) {
     userGuess = suggestion;
-    suggestions = []; // Hide suggestions when a suggestion is clicked
+    suggestions = [];
   }
 
-  // Handle pagination changes
   function handlePageChange(page: number) {
     currentPage = page;
-    loadSong(currentPage - 1); // Zero-based index for loading songs
+    loadSong(currentPage - 1);
   }
 </script>
 
 <main>
-  <h1>Mezmur Trivia</h1>
-  <TrackList {tracks} {songInfo} />
-  <div style="margin-top: 30px;  text-align: center;">
-    <input
-      type="text"
-      bind:value={userGuess}
-      placeholder="Guess the song title..."
-      on:input={handleInput}
-      style="padding: 10px; width: 60%; border: 1px solid #ddd; border-radius: 5px; color: #333; background-color: #fff;"
-    />
-    <Button on:click={handleGuess}>Submit Guess</Button>
-    {#if suggestions.length > 0}
-      <ul
-        style="list-style: none; padding: 0; margin-top: 10px; 
-        text-align: left; color: #333; display: inline-block; width: 60%; background: #fff; border: 1px solid #ddd; border-radius: 5px;"
-      >
-        {#each suggestions as suggestion}
-          <button
-            style="padding: 5px 10px; cursor: pointer; background: none; border: none; color:black; text-align: left; width: 100%;"
-            on:click={() => handleSuggestionClick(suggestion)}
-          >
-            {suggestion}
-          </button>
-        {/each}
-      </ul>
-    {/if}
-    {#if feedbackMessage}
-      <p
-        style="margin-top: 20px; font-size: 18px; color: {feedbackMessage.includes('got it') ? 'green' : 'red'};"
-      >
-        {feedbackMessage}
-      </p>
-    {/if}
+  <div class="flex justify-center">
+    <img class="h-28" src="https://utfs.io/f/ANNyZZJHi12wg4TA4w63j0iDgPdnJFK9BYayENlqe67mcptS" alt="">
   </div>
-  <div>
-    
-  </div>
-  
-</main>
-
-
-
-<div class="p-4 mt-0 bg-black text-white">
-  <Pagination.Root count={database.length} perPage={perPage} let:pages let:currentPage>
-    <Pagination.Content>
-      <Pagination.Item >
-        <Pagination.PrevButton on:click={() => handlePageChange(currentPage ?? 1 - 1)} />
-      </Pagination.Item>
-      {#each pages as page (page.key)}
-        {#if page.type === "ellipsis"}
-          <Pagination.Item>
-            <Pagination.Ellipsis />
-          </Pagination.Item>
-        {:else}
-          <Pagination.Item>
-            <Pagination.Link
-              {page}
-              isActive={currentPage == page.value}
-              class={`px-4 py-2 border rounded-md ${
-                currentPage == page.value
-                  ? "bg-black text-white "
-                  : "text-white border-gray-300 hover:bg-blue-100"
-              }`}
-              on:click={() => handlePageChange(page.value)}
-            >
-              {page.value}
-            </Pagination.Link>
-          </Pagination.Item>
+  <Card.Root class="mx-auto max-w-lg mt-8 bg-gray-800 text-white">
+    <Card.Header>
+      <Card.Title class="text-xl text-yellow-300">Guess the Song</Card.Title>
+      <Card.Description class="text-gray-400">
+        Listen to the clips and guess the title of the song!
+      </Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <TrackList {tracks} {songInfo} />
+      <div class="mt-6 text-center">
+        <Input
+          bind:value={userGuess}
+          placeholder="Guess the song title..."
+          on:input={handleInput}
+          class="mb-4 bg-gray-700 text-white border-gray-600 placeholder-gray-400"
+        />
+        <Button on:click={handleGuess} class="w-full bg-yellow-500 hover:bg-yellow-600 text-black">
+          Submit Guess
+        </Button>
+        {#if suggestions.length > 0}
+          <ul class="list-none mt-2 p-2 bg-gray-700 border border-gray-600 rounded-md">
+            {#each suggestions as suggestion}
+              <button
+                class="w-full text-left py-2 px-4 text-white hover:bg-gray-600"
+                on:click={() => handleSuggestionClick(suggestion)}
+              >
+                {suggestion}
+              </button>
+            {/each}
+          </ul>
         {/if}
-      {/each}
-      <Pagination.Item>
-        <Pagination.NextButton 
-        on:click={() => handlePageChange(currentPage ?? 1 + 1)} />
-      </Pagination.Item>
-    </Pagination.Content>
-  </Pagination.Root>
-</div>
-
+        {#if feedbackMessage}
+          <p
+            class="mt-4 text-lg"
+            style="color: {feedbackMessage.includes('got it') ? 'lightgreen' : 'red'};"
+          >
+            {feedbackMessage}
+          </p>
+        {/if}
+      </div>
+    </Card.Content>
+    <Card.Footer class="bg-gray-900 p-4">
+      <Pagination.Root count={database.length} perPage={perPage} let:pages let:currentPage>
+        <Pagination.Content>
+          <Pagination.Item>
+            <Pagination.PrevButton on:click={() => handlePageChange((currentPage || 1) - 1)} />
+          </Pagination.Item>
+          {#each pages as page (page.key)}
+            {#if page.type === "ellipsis"}
+              <Pagination.Item>
+                <Pagination.Ellipsis class="text-gray-500" />
+              </Pagination.Item>
+            {:else}
+              <Pagination.Item>
+                <Pagination.Link
+                  {page}
+                  isActive={currentPage == page.value}
+                  class={`px-3 py-1 rounded-md ${
+                    currentPage == page.value
+                      ? "bg-yellow-500 text-black"
+                      : "hover:bg-gray-700 text-gray-300"
+                  }`}
+                  on:click={() => handlePageChange(page.value)}
+                >
+                  {page.value}
+                </Pagination.Link>
+              </Pagination.Item>
+            {/if}
+          {/each}
+          <Pagination.Item>
+            <Pagination.NextButton on:click={() => handlePageChange((currentPage || 1) + 1)} />
+          </Pagination.Item>
+        </Pagination.Content>
+      </Pagination.Root>
+    </Card.Footer>
+  </Card.Root>
+</main>
 
 <style>
   main {
-    color: #ffffff;
-    background-color: #333;
+    color: #eaeaea;
+    background-color: #1a1a1a;
     padding: 20px;
     font-family: Arial, sans-serif;
+    min-height: 100vh;
   }
 
-  h1 {
-    text-align: center;
-    color: #f5a623;
+  
+
+  button {
+    cursor: pointer;
   }
 </style>
