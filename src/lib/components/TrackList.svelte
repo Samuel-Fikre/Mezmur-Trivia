@@ -1,6 +1,26 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button/index.js";
 
+  interface Track {
+    id: number;
+    label: string;
+    songUrl: string;
+  }
+
+  interface SongInfo {
+    title: string;
+    year: string;
+    hint: string;
+    views: string;
+    difficulty: string;
+  }
+
+  interface $$Props {
+    tracks: Track[];
+    songInfo: SongInfo | null;
+    onBassPlay: () => void;
+  }
+
   export let tracks: { id: number; label: string; songUrl: string; }[] = [];
   export const songInfo: { title: string; year: string; views: string; difficulty: string; } | null = null;
 
