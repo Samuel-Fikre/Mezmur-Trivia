@@ -147,7 +147,7 @@
 
 <main class="h-screen p-4 sm:p-6 md:p-8 flex flex-col">
   <div class="flex justify-center h-[10vh]">
-    <img class="h-full object-contain -mt-0 w-36" src="https://utfs.io/f/ANNyZZJHi12wg4TA4w63j0iDgPdnJFK9BYayENlqe67mcptS" alt="">
+    <img class=" object-contain -mt-4 w-36 h-20" src="https://utfs.io/f/ANNyZZJHi12wg4TA4w63j0iDgPdnJFK9BYayENlqe67mcptS" alt="">
   </div>
   <Card.Root class="mx-auto w-full max-w-[95%] sm:max-w-lg h-[85vh] flex flex-col bg-gray-800 text-white">
     <Card.Header class="p-3 sm:p-4">
@@ -164,7 +164,10 @@
         </button>
       </div>
       <Card.Description class="text-xs sm:text-sm text-gray-400">
-        Listen to the clips and guess the title of the song!
+        Listen to the clips and guess the title of the song! 
+      </Card.Description>
+      <Card.Description class="text-xs sm:text-sm text-gray-400">
+        Wait a little bit for the song to load.
       </Card.Description>
     </Card.Header>
     <Card.Content class="flex-1 overflow-y-auto p-3 sm:p-4">
@@ -180,7 +183,7 @@
                   <li>Use the hints and year information provided</li>
                   <li>Type your guess in the input field</li>
                   <li>Submit your guess to see if you're correct!</li>
-                  <li>If you want to reach me Here is My Telegram Handle @sami_f_k</li>
+                  <li>Feel free to reach me on Telegram at @sami_f_k.</li>
                 </ul>
               </Accordion.Content>
             </Accordion.Item>
@@ -188,9 +191,9 @@
               <Accordion.Trigger class="text-sm text-yellow-300">Tips & Tricks</Accordion.Trigger>
               <Accordion.Content class="text-sm text-gray-300">
                 <ul class="list-disc pl-4 space-y-2">
-                  <li>Start with the Combined track for the full experience</li>
                   <li>Pay attention to the year and hint provided</li>
                   <li>Try different parts of the song if you're stuck</li>
+                  <li>Have Fun!</li>
                 </ul>
               </Accordion.Content>
             </Accordion.Item>
