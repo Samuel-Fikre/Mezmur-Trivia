@@ -46,8 +46,8 @@
     loadSong(currentPage - 1);
   });
 
-  console.log(import.meta.env.VITE_BACKEND_URI);
-      console.log("sam");
+ 
+      
 
   async function fetchSongs() {
     try {
@@ -158,7 +158,7 @@
                   <li>Use the hints and year information provided</li>
                   <li>Type your guess in the input field</li>
                   <li>Submit your guess to see if you're correct!</li>
-                  <li>If you want to reach Here is My Telegram Handle @sami_f_k</li>
+                  <li>If you want to reach me Here is My Telegram Handle @sami_f_k</li>
                 </ul>
               </Accordion.Content>
             </Accordion.Item>
