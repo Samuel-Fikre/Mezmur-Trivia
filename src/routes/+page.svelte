@@ -138,7 +138,7 @@
         </button>
       </div>
       <Card.Description class="text-xs sm:text-sm text-gray-400">
-        Listen to the clips and guess the title of the song!
+        Listenn to the clips and guess the title of the song!
       </Card.Description>
     </Card.Header>
     <Card.Content class="flex-1 overflow-y-auto p-3 sm:p-4">
