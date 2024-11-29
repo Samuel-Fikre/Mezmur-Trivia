@@ -47,13 +47,10 @@
   });
 
  
-      
-
+ 
   async function fetchSongs() {
     try {
-      const response = await fetch(import.meta.env.VITE_BACKEND_URI);
-      console.log(import.meta.env.VITE_BACKEND_URI);
-      console.log("sam");
+      const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
       database = await response.json();
     } catch (error) {
       console.error("Error fetching songs:", error);
@@ -150,7 +147,8 @@
       {#if showInstructions}
         <div class="mb-4">
           <Accordion.Root class="w-full">
-            <Accordion.Item value="how-to-play">
+            <Accordion.Item value=
+            "how-to-play">
               <Accordion.Trigger class="text-sm text-yellow-300">How to Play</Accordion.Trigger>
               <Accordion.Content class="text-sm text-gray-300">
                 <ul class="list-disc pl-4 space-y-2">
