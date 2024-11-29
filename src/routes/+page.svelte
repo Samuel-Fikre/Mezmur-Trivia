@@ -64,7 +64,7 @@
  
   async function fetchSongs() {
     try {
-      const response = await fetch("http://localhost:3000/api/songs");
+      const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
       database = await response.json();
     } catch (error) {
       console.error("Error fetching songs:", error);
