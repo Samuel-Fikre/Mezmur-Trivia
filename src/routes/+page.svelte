@@ -48,7 +48,7 @@
 
   async function fetchSongs() {
     try {
-      const response = await fetch("https://mezmurbackend.onrender.com/api/songs");
+      const response = await fetch(import.meta.env.VITE_BACKEND_URI);
       database = await response.json();
     } catch (error) {
       console.error("Error fetching songs:", error);
