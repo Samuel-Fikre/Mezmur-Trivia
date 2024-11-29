@@ -8,6 +8,8 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { toast } from "svelte-sonner";
   import * as Accordion from "$lib/components/ui/accordion/index.js";
+  import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
+  import { Separator } from "$lib/components/ui/separator/index.js";
 
   interface Track {
     id: number;
@@ -40,17 +42,29 @@
   const perPage = 1;
   let currentPage = 1;
   let showInstructions = false;
+  let audioElements: HTMLAudioElement[] = [];
 
-  onMount(async () => {
-    await fetchSongs();
-    loadSong(currentPage - 1);
+  onMount(() => {
+    fetchSongs().then(() => {
+      loadSong(currentPage - 1);
+    });
+    
+    window.addEventListener('audioRefsUpdate', ((e: CustomEvent) => {
+      audioElements = e.detail;
+    }) as EventListener);
+    
+    return () => {
+      window.removeEventListener('audioRefsUpdate', ((e: CustomEvent) => {
+        audioElements = e.detail;
+      }) as EventListener);
+    };
   });
 
  
  
   async function fetchSongs() {
     try {
-      const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
+      const response = await fetch("http://localhost:3000/api/songs");
       database = await response.json();
     } catch (error) {
       console.error("Error fetching songs:", error);
@@ -105,6 +119,7 @@
   }
 
   function handlePageChange(page: number) {
+    stopAllTracks();
     currentPage = page;
     loadSong(currentPage - 1);
   }
@@ -119,11 +134,20 @@
   function toggleInstructions() {
     showInstructions = !showInstructions;
   }
+
+  function stopAllTracks() {
+    audioElements.forEach(audio => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+  }
 </script>
 
 <main class="h-screen p-4 sm:p-6 md:p-8 flex flex-col">
   <div class="flex justify-center h-[10vh]">
-    <img class="h-full object-contain -mt-10" src="https://utfs.io/f/ANNyZZJHi12wg4TA4w63j0iDgPdnJFK9BYayENlqe67mcptS" alt="">
+    <img class="h-full object-contain -mt-0 w-36" src="https://utfs.io/f/ANNyZZJHi12wg4TA4w63j0iDgPdnJFK9BYayENlqe67mcptS" alt="">
   </div>
   <Card.Root class="mx-auto w-full max-w-[95%] sm:max-w-lg h-[85vh] flex flex-col bg-gray-800 text-white">
     <Card.Header class="p-3 sm:p-4">
@@ -174,7 +198,7 @@
         </div>
       {/if}
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2 sm:p-3 border border-gray-700 rounded-md bg-gray-900 text-white">
+      <div class="grid grid-cols-2 gap-2 p-2 sm:p-3 border border-gray-700 rounded-md bg-gray-900 text-white">
         <div>
           <p class="text-xs text-gray-400">Year</p>
           <p class="text-sm sm:text-base font-semibold">{songInfo?.year || "Unknown"}</p>
@@ -187,6 +211,25 @@
 
       <TrackList {tracks} {songInfo} onBassPlay={handleBassPlay} />
       <div class="mt-3 text-center">
+        {#if suggestions.length > 0}
+          <ScrollArea class={`w-full mb-2 rounded-md border border-gray-600 bg-gray-700 ${
+            suggestions.length > 3 ? 'h-[15vh]' : 'h-auto max-h-[15vh]'
+          }`}>
+            <div class="p-2">
+              {#each suggestions as suggestion}
+                <button
+                  class="w-full text-left py-1.5 px-2 text-xs sm:text-sm text-white hover:bg-gray-600 rounded flex items-center"
+                  on:click={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </button>
+                {#if suggestion !== suggestions[suggestions.length - 1]}
+                  <Separator class="my-1 bg-gray-600" />
+                {/if}
+              {/each}
+            </div>
+          </ScrollArea>
+        {/if}
         <Input
           bind:value={userGuess}
           placeholder="Guess the song title..."
@@ -196,18 +239,6 @@
         <Button on:click={handleGuess} class="w-full text-sm bg-yellow-500 hover:bg-yellow-600 text-black">
           Submit Guess
         </Button>
-        {#if suggestions.length > 0}
-          <ul class="list-none mt-2 p-2 max-h-[15vh] overflow-y-auto bg-gray-700 border border-gray-600 rounded-md">
-            {#each suggestions as suggestion}
-              <button
-                class="w-full text-left py-1.5 px-2 text-xs sm:text-sm text-white hover:bg-gray-600"
-                on:click={() => handleSuggestionClick(suggestion)}
-              >
-                {suggestion}
-              </button>
-            {/each}
-          </ul>
-        {/if}
         {#if feedbackMessage}
           <div class="mt-2 flex items-center justify-center gap-2 text-sm sm:text-base">
             {#if feedbackMessage === "got"}
