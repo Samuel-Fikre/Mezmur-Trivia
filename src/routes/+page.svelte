@@ -46,9 +46,14 @@
     loadSong(currentPage - 1);
   });
 
+  console.log(import.meta.env.VITE_BACKEND_URI);
+      console.log("sam");
+
   async function fetchSongs() {
     try {
       const response = await fetch(import.meta.env.VITE_BACKEND_URI);
+      console.log(import.meta.env.VITE_BACKEND_URI);
+      console.log("sam");
       database = await response.json();
     } catch (error) {
       console.error("Error fetching songs:", error);
@@ -138,7 +143,7 @@
         </button>
       </div>
       <Card.Description class="text-xs sm:text-sm text-gray-400">
-        Listenn to the clips and guess the title of the song!
+        Listen to the clips and guess the title of the song!
       </Card.Description>
     </Card.Header>
     <Card.Content class="flex-1 overflow-y-auto p-3 sm:p-4">
