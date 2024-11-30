@@ -190,6 +190,7 @@
                   <li>Use the hints and year information provided</li>
                   <li>Type your guess in the input field</li>
                   <li>Submit your guess to see if you're correct!</li>
+                  <li>The Year is in the Ethiopian Calendar</li>
                   <li>Feel free to reach me on Telegram at @sami_f_k.</li>
                 </ul>
               </Accordion.Content>
