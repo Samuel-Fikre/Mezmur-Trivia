@@ -43,6 +43,7 @@
   let currentPage = 1;
   let showInstructions = false;
   let audioElements: HTMLAudioElement[] = [];
+  let allSongs: Song[] = [];
 
   onMount(() => {
     fetchSongs().then(() => {
@@ -65,8 +66,8 @@
   async function fetchSongs() {
     try {
       const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
-      const allSongs = await response.json();
-      database = allSongs.filter(song => song.songs && song.songs.length > 0);
+      allSongs = await response.json();
+      database = allSongs.filter(song => song.songs && song.songs.length >= 4);
     } catch (error) {
       console.error("Error fetching songs:", error);
     }
@@ -102,7 +103,7 @@
   function handleInput(event: Event) {
     const input = (event.target as HTMLInputElement).value;
     userGuess = input;
-    suggestions = database
+    suggestions = allSongs
       .map((song) => song.title)
       .filter((title) => title.toLowerCase().includes(input.toLowerCase()));
 
