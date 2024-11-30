@@ -222,9 +222,12 @@
       <TrackList {tracks} {songInfo} onBassPlay={handleBassPlay} />
       <div class="mt-3 text-center">
         {#if suggestions.length > 0}
-          <ScrollArea class={`w-full mb-2 rounded-md border border-gray-600 bg-gray-700 ${
-            suggestions.length > 3 ? 'h-[15vh]' : 'h-auto max-h-[15vh]'
-          }`}>
+          <ScrollArea 
+            class={`w-full mb-2 rounded-md border border-gray-600 bg-gray-700 overflow-y-auto -webkit-overflow-scrolling-touch ${
+              suggestions.length > 3 ? 'h-[15vh]' : 'h-auto max-h-[15vh]'
+            }`}
+            style="touch-action: pan-y;"
+          >
             <div class="p-2">
               {#each suggestions as suggestion}
                 <button
@@ -335,5 +338,17 @@
   :global(.card-content::-webkit-scrollbar-thumb) {
     background-color: #4a4a4a;
     border-radius: 4px;
+  }
+
+  :global(.scrollarea-viewport) {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+  }
+
+  @media (max-width: 768px) {
+    :global(.scrollarea-viewport) {
+      scroll-behavior: smooth;
+      overscroll-behavior-y: contain;
+    }
   }
 </style>
