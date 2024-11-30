@@ -65,7 +65,8 @@
   async function fetchSongs() {
     try {
       const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
-      database = await response.json();
+      const allSongs = await response.json();
+      database = allSongs.filter(song => song.songs && song.songs.length > 0);
     } catch (error) {
       console.error("Error fetching songs:", error);
     }
@@ -74,22 +75,27 @@
   function loadSong(index: number) {
     if (index < database.length) {
       const song = database[index];
-      tracks = [
-        { id: 1, label: "Drums", songUrl: song.songs[0] },
-        { id: 2, label: "Bass", songUrl: song.songs[1] },
-        { id: 3, label: "Instrument", songUrl: song.songs[2] },
-        { id: 4, label: "Combined", songUrl: song.songs[3] },
-      ];
-      songInfo = {
-        title: song.title,
-        year: song.year,
-        hint: song.description,
-        views: "0",
-        difficulty: "Medium"
-      };
-      feedbackMessage = "";
-      userGuess = "";
-      suggestions = [];
+      if (song.songs && song.songs.length >= 4) {
+        tracks = [
+          { id: 1, label: "Drums", songUrl: song.songs[0] },
+          { id: 2, label: "Bass", songUrl: song.songs[1] },
+          { id: 3, label: "Instrument", songUrl: song.songs[2] },
+          { id: 4, label: "Combined", songUrl: song.songs[3] },
+        ];
+        songInfo = {
+          title: song.title,
+          year: song.year,
+          hint: song.description,
+          views: "0",
+          difficulty: "Medium"
+        };
+        feedbackMessage = "";
+        userGuess = "";
+        suggestions = [];
+      } else {
+        console.warn("Skipping song due to missing tracks:", song.title);
+        loadSong(index + 1);
+      }
     }
   }
 
@@ -193,7 +199,7 @@
                 <ul class="list-disc pl-4 space-y-2">
                   <li>Pay attention to the year and hint provided</li>
                   <li>Try different parts of the song if you're stuck</li>
-                  <li>Have Fun!</li>
+                  <li>Have Fun!</li> 
                 </ul>
               </Accordion.Content>
             </Accordion.Item>
@@ -260,7 +266,12 @@
       </div>
     </Card.Content>
     <Card.Footer class="bg-gray-900 p-2 sm:p-3">
-      <Pagination.Root count={database.length} perPage={perPage} let:pages let:currentPage>
+      <Pagination.Root 
+        count={database.filter(song => song.songs && song.songs.length >= 4).length} 
+        perPage={perPage} 
+        let:pages 
+        let:currentPage
+      >
         <Pagination.Content class="flex flex-wrap justify-center gap-1">
           <Pagination.Item>
             <Pagination.PrevButton class="text-xs sm:text-sm" on:click={() => handlePageChange((currentPage || 1) - 1)} />
