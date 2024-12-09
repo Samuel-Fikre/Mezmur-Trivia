@@ -154,7 +154,7 @@
 
 <main class="h-screen p-4 sm:p-6 md:p-8 flex flex-col">
   <div class="flex justify-center h-[10vh]">
-    <img class=" object-contain -mt-4 w-36 h-20" src="https://utfs.io/f/ANNyZZJHi12wg4TA4w63j0iDgPdnJFK9BYayENlqe67mcptS" alt="">
+    <img class=" object-contain -mt-4 w-36 h-20" src="https://utfs.io/f/yh10ZRrvFx0zTfDCd6zA8DEmVxHqsGoO76MB4uYyhUdbvKFN" alt="">
   </div>
   <Card.Root class="mx-auto w-full max-w-[95%] sm:max-w-lg h-[85vh] flex flex-col bg-gray-800 text-white">
     <Card.Header class="p-3 sm:p-4">
