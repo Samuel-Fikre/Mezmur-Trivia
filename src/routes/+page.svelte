@@ -30,6 +30,9 @@
     year: string;
     description: string;
     songs: string[];
+    lyrics?: string[];
+    singer?: string;
+    singerFacts?: string[];
   }
 
   let tracks: Track[] = [];
@@ -38,6 +41,9 @@
   let userGuess = "";
   let suggestions: string[] = [];
   let feedbackMessage = "";
+  let gameMode = "song"; // Default game mode
+  let currentLyric = ""; // For lyrics game mode
+  let currentSingerFact = ""; // For singer knowledge game mode
 
   const perPage = 1;
   let currentPage = 1;
@@ -45,10 +51,15 @@
   let audioElements: HTMLAudioElement[] = [];
   let allSongs: Song[] = [];
 
+  // Game mode options
+  const gameModes = [
+    { id: "song", label: "Guess the Song" },
+    { id: "lyrics", label: "Guess by Lyrics" },
+    { id: "singer", label: "Know Your Singer" }
+  ];
+
   onMount(() => {
-    fetchSongs().then(() => {
-      loadSong(currentPage - 1);
-    });
+    loadGameMode(gameMode);
     
     window.addEventListener('audioRefsUpdate', ((e: CustomEvent) => {
       audioElements = e.detail;
@@ -61,15 +72,57 @@
     };
   });
 
- 
- 
+  async function loadGameMode(mode: string) {
+    gameMode = mode;
+    resetGame();
+    
+    switch (mode) {
+      case "song":
+        await fetchSongs();
+        loadSong(currentPage - 1);
+        break;
+      case "lyrics":
+        await fetchLyricsQuiz();
+        loadLyricsQuestion(currentPage - 1);
+        break;
+      case "singer":
+        await fetchSingerQuiz();
+        loadSingerQuestion(currentPage - 1);
+        break;
+    }
+  }
+
   async function fetchSongs() {
     try {
-      const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
+      const response = await fetch("http://localhost:3001/api/songs");
       allSongs = await response.json();
       database = allSongs.filter(song => song.songs && song.songs.length >= 4);
     } catch (error) {
       console.error("Error fetching songs:", error);
+    }
+  }
+
+  async function fetchLyricsQuiz() {
+    try {
+      const response = await fetch("http://localhost:3001/api/lyrics-quiz");
+      if (!response.ok) throw new Error("Failed to fetch lyrics quiz");
+      allSongs = await response.json();
+      database = allSongs;
+    } catch (error) {
+      console.error("Error fetching lyrics quiz:", error);
+      toast.error("Failed to load lyrics quiz");
+    }
+  }
+
+  async function fetchSingerQuiz() {
+    try {
+      const response = await fetch("http://localhost:3001/api/singer-quiz");
+      if (!response.ok) throw new Error("Failed to fetch singer quiz");
+      allSongs = await response.json();
+      database = allSongs;
+    } catch (error) {
+      console.error("Error fetching singer quiz:", error);
+      toast.error("Failed to load singer quiz");
     }
   }
 
@@ -98,6 +151,43 @@
         loadSong(index + 1);
       }
     }
+  }
+
+  function loadLyricsQuestion(index: number) {
+    if (database[index] && database[index].lyrics && database[index].lyrics.length > 0) {
+      const randomLyricIndex = Math.floor(Math.random() * database[index].lyrics.length);
+      currentLyric = database[index].lyrics[randomLyricIndex];
+      songInfo = {
+        title: database[index].title,
+        year: database[index].year,
+        hint: "Can you guess the song from these lyrics?",
+        views: "",
+        difficulty: "medium"
+      };
+    }
+  }
+
+  function loadSingerQuestion(index: number) {
+    if (database[index] && database[index].singerFacts && database[index].singerFacts.length > 0) {
+      const randomFactIndex = Math.floor(Math.random() * database[index].singerFacts.length);
+      currentSingerFact = database[index].singerFacts[randomFactIndex];
+      songInfo = {
+        title: database[index].singer || "",
+        year: "",
+        hint: "Can you guess the singer from this fact?",
+        views: "",
+        difficulty: "medium"
+      };
+    }
+  }
+
+  function resetGame() {
+    userGuess = "";
+    suggestions = [];
+    feedbackMessage = "";
+    currentLyric = "";
+    currentSingerFact = "";
+    currentPage = 1;
   }
 
   function handleInput(event: Event) {
@@ -152,193 +242,219 @@
   }
 </script>
 
-<main class="h-screen p-4 sm:p-6 md:p-8 flex flex-col">
-  <div class="flex justify-center h-[10vh]">
-    <img class=" object-contain -mt-4 w-36 h-20" src="https://utfs.io/f/yh10ZRrvFx0zTfDCd6zA8DEmVxHqsGoO76MB4uYyhUdbvKFN" alt="">
-  </div>
-  <Card.Root class="mx-auto w-full max-w-[95%] sm:max-w-lg h-[85vh] flex flex-col bg-gray-800 text-white">
-    <Card.Header class="p-3 sm:p-4">
-      <div class="flex items-center justify-between">
-        <Card.Title class="text-base sm:text-lg text-yellow-300">Guess the Song</Card.Title>
-        <button 
-          class="text-gray-400 hover:text-white transition-colors" 
-          on:click={toggleInstructions}
-          aria-label="Game Instructions"
+<main class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white flex flex-col items-center">
+  <div class="w-full max-w-3xl px-4 py-6 md:py-12 mx-auto">
+    <!-- Logo -->
+    <div class="flex justify-center mb-8 md:mb-12">
+      <img 
+        class="w-28 md:w-32 h-14 md:h-16 object-contain opacity-90 hover:opacity-100 transition-opacity" 
+        src="https://utfs.io/f/yh10ZRrvFx0zTfDCd6zA8DEmVxHqsGoO76MB4uYyhUdbvKFN" 
+        alt="Mezmur Trivia"
+      />
+    </div>
+
+    <!-- Game Header -->
+    <div class="text-center mb-6 md:mb-8 space-y-2">
+      <h1 class="text-xl md:text-2xl font-medium text-yellow-400">
+        {#if gameMode === "song"}
+          Guess the Song
+        {:else if gameMode === "lyrics"}
+          Guess by Lyrics
+        {:else}
+          Know Your Singer
+        {/if}
+      </h1>
+      <p class="text-xs md:text-sm text-gray-400 px-4">
+        {#if gameMode === "song"}
+          Listen to the clips and guess the title of the song!
+        {:else if gameMode === "lyrics"}
+          Read the lyrics and guess the song title!
+        {:else}
+          Read about the singer and guess who it is!
+        {/if}
+      </p>
+    </div>
+
+    <!-- Game Mode Selector -->
+    <div class="flex flex-wrap justify-center gap-2 mb-6 md:mb-8 px-2">
+      {#each gameModes as mode}
+        <Button
+          variant={gameMode === mode.id ? "default" : "ghost"}
+          size="sm"
+          class="{gameMode === mode.id ? 'bg-yellow-500/90 hover:bg-yellow-500 text-gray-900' : 'text-gray-400 hover:text-white hover:bg-gray-800'} 
+                 transition-all min-w-[120px] md:min-w-[140px] py-2 md:py-2.5 text-sm md:text-base"
+          on:click={() => loadGameMode(mode.id)}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
-          </svg>
-        </button>
-      </div>
-      <Card.Description class="text-xs sm:text-sm text-gray-400">
-        Listen to the clips and guess the title of the song! 
-      </Card.Description>
-      <Card.Description class="text-xs sm:text-sm text-gray-400">
-        Wait a little bit for the song to load.
-      </Card.Description>
-    </Card.Header>
-    <Card.Content class="flex-1 overflow-y-auto p-3 sm:p-4">
-      {#if showInstructions}
-        <div class="mb-4">
-          <Accordion.Root class="w-full">
-            <Accordion.Item value=
-            "how-to-play">
-              <Accordion.Trigger class="text-sm text-yellow-300">How to Play</Accordion.Trigger>
-              <Accordion.Content class="text-sm text-gray-300">
-                <ul class="list-disc pl-4 space-y-2">
-                  <li>Listen to different track parts of the song (Drums, Bass, Instrument)</li>
-                  <li>Use the hints and year information provided</li>
-                  <li>Type your guess in the input field</li>
-                  <li>Submit your guess to see if you're correct!</li>
-                  <li>The Year is in the Ethiopian Calendar</li>
-                  <li>Feel free to reach me on Telegram at @sami_f_k.</li>
-                </ul>
-              </Accordion.Content>
-            </Accordion.Item>
-            <Accordion.Item value="tips">
-              <Accordion.Trigger class="text-sm text-yellow-300">Tips & Tricks</Accordion.Trigger>
-              <Accordion.Content class="text-sm text-gray-300">
-                <ul class="list-disc pl-4 space-y-2">
-                  <li>Pay attention to the year and hint provided</li>
-                  <li>Try different parts of the song if you're stuck</li>
-                  <li>Have Fun!</li> 
-                </ul>
-              </Accordion.Content>
-            </Accordion.Item>
-          </Accordion.Root>
+          {mode.label}
+        </Button>
+      {/each}
+    </div>
+
+    <!-- Game Content -->
+    <div class="space-y-4 md:space-y-6 px-2">
+      <!-- Info Card -->
+      <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-gray-700/50">
+        <div class="grid grid-cols-2 gap-3 md:gap-4">
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5 md:mb-1">Year</p>
+            <p class="text-sm md:text-base font-medium">{songInfo?.year || "Unknown"}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5 md:mb-1">Hint</p>
+            <p class="text-sm md:text-base font-medium">{songInfo?.hint || "No hint available"}</p>
+          </div>
         </div>
+      </div>
+
+      <!-- Game Interface -->
+      {#if gameMode === "song"}
+        <div class="bg-gray-800/30 rounded-lg overflow-hidden">
+          {#if tracks.length > 0}
+            <TrackList {tracks} {songInfo} onBassPlay={handleBassPlay} />
+          {/if}
+        </div>
+      {:else if gameMode === "lyrics"}
+        {#if currentLyric}
+          <div class="bg-gray-800/30 rounded-lg p-4 md:p-6">
+            <p class="text-base md:text-lg italic text-center text-gray-200 leading-relaxed">"{currentLyric}"</p>
+          </div>
+        {/if}
+      {:else}
+        {#if currentSingerFact}
+          <div class="bg-gray-800/30 rounded-lg p-4 md:p-6">
+            <p class="text-base md:text-lg text-center text-gray-200 leading-relaxed">{currentSingerFact}</p>
+          </div>
+        {/if}
       {/if}
 
-      <div class="grid grid-cols-2 gap-2 p-2 sm:p-3 border border-gray-700 rounded-md bg-gray-900 text-white">
-        <div>
-          <p class="text-xs text-gray-400">Year</p>
-          <p class="text-sm sm:text-base font-semibold">{songInfo?.year || "Unknown"}</p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-400">Hint</p>
-          <p class="text-sm sm:text-base font-semibold">{songInfo?.hint || "No hint available"}</p>
-        </div>
-      </div>
-
-      <TrackList {tracks} {songInfo} onBassPlay={handleBassPlay} />
-      <div class="mt-3 text-center">
+      <!-- Input Section -->
+      <div class="space-y-3">
         {#if suggestions.length > 0}
-          <ScrollArea 
-            class={`w-full mb-2 rounded-md border border-gray-600 bg-gray-700 overflow-y-auto -webkit-overflow-scrolling-touch ${
-              suggestions.length > 3 ? 'h-[15vh]' : 'h-auto max-h-[15vh]'
-            }`}
-            style="touch-action: pan-y;"
-          >
-            <div class="p-2">
+          <ScrollArea class="h-28 md:h-32 rounded-lg border border-gray-700/50 bg-gray-800/30">
+            <div class="p-1">
               {#each suggestions as suggestion}
                 <button
-                  class="w-full text-left py-1.5 px-2 text-xs sm:text-sm text-white hover:bg-gray-600 rounded flex items-center"
+                  class="w-full text-left px-3 py-2.5 md:py-2 text-sm text-gray-300 hover:bg-gray-700/50 active:bg-gray-600/50 rounded-md transition-colors"
                   on:click={() => handleSuggestionClick(suggestion)}
                 >
                   {suggestion}
                 </button>
-                {#if suggestion !== suggestions[suggestions.length - 1]}
-                  <Separator class="my-1 bg-gray-600" />
-                {/if}
               {/each}
             </div>
           </ScrollArea>
         {/if}
-        <Input
-          bind:value={userGuess}
-          placeholder="Guess the song title..."
-          on:input={handleInput}
-          class="mb-2 text-sm bg-gray-700 text-white border-gray-600 placeholder-gray-400"
-        />
-        <Button on:click={handleGuess} class="w-full text-sm bg-yellow-500 hover:bg-yellow-600 text-black">
-          Submit Guess
-        </Button>
+
+        <div class="flex gap-2">
+          <Input
+            bind:value={userGuess}
+            placeholder={gameMode === "singer" ? "Enter singer name..." : "Enter song title..."}
+            on:input={handleInput}
+            class="bg-gray-800/30 border-gray-700/50 text-white placeholder:text-gray-500 h-11 md:h-12 text-sm md:text-base"
+          />
+          <Button 
+            on:click={handleGuess}
+            class="bg-yellow-500/90 hover:bg-yellow-500 text-gray-900 px-6 md:px-8 h-11 md:h-12 text-sm md:text-base font-medium"
+          >
+            Guess
+          </Button>
+        </div>
+
         {#if feedbackMessage}
-          <div class="mt-2 flex items-center justify-center gap-2 text-sm sm:text-base">
+          <div class="flex justify-center items-center gap-2 py-2">
             {#if feedbackMessage === "got"}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="lightgreen" class="size-6">
-                <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clip-rule="evenodd" />
-              </svg>
-              <span class="text-lightgreen">You got it!</span>
+              <div class="flex items-center gap-2 text-green-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm md:text-base font-medium">Correct!</span>
+              </div>
             {:else}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red" class="size-6">
-                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z" clip-rule="evenodd" />
-              </svg>
-              <span class="text-red-500">You don't got it!</span>
+              <div class="flex items-center gap-2 text-red-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm md:text-base font-medium">Try again!</span>
+              </div>
             {/if}
           </div>
         {/if}
       </div>
-    </Card.Content>
-    <Card.Footer class="bg-gray-900 p-2 sm:p-3">
-      <Pagination.Root 
-        count={database.filter(song => song.songs && song.songs.length >= 4).length} 
-        perPage={perPage} 
-        let:pages 
-        let:currentPage
-      >
-        <Pagination.Content class="flex flex-wrap justify-center gap-1">
-          <Pagination.Item>
-            <Pagination.PrevButton class="text-xs sm:text-sm" on:click={() => handlePageChange((currentPage || 1) - 1)} />
-          </Pagination.Item>
-          {#each pages as page (page.key)}
-            {#if page.type === "ellipsis"}
-              <Pagination.Item>
-                <Pagination.Ellipsis class="text-gray-500" />
-              </Pagination.Item>
-            {:else}
-              <Pagination.Item>
-                <Pagination.Link
-                  {page}
-                  isActive={currentPage == page.value}
-                  class={`px-2 py-1 text-xs sm:text-sm rounded-md ${
-                    currentPage == page.value
-                      ? "bg-yellow-500 text-black"
-                      : "hover:bg-gray-700 text-gray-300"
-                  }`}
-                  on:click={() => handlePageChange(page.value)}
-                >
-                  {page.value}
-                </Pagination.Link>
-              </Pagination.Item>
-            {/if}
-          {/each}
-          <Pagination.Item>
-            <Pagination.NextButton class="text-xs sm:text-sm" on:click={() => handlePageChange((currentPage || 1) + 1)} />
-          </Pagination.Item>
-        </Pagination.Content>
-      </Pagination.Root>
-    </Card.Footer>
-  </Card.Root>
+    </div>
+
+    <!-- Help Button -->
+    <button 
+      class="fixed bottom-4 md:bottom-6 right-4 md:right-6 bg-gray-800/80 hover:bg-gray-800 text-gray-400 hover:text-white p-2.5 md:p-3 rounded-full backdrop-blur-sm transition-all shadow-lg active:scale-95"
+      on:click={toggleInstructions}
+      aria-label="Game Instructions"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 md:w-6 md:h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Instructions Modal -->
+  {#if showInstructions}
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-gray-800/90 backdrop-blur-sm w-full max-w-[340px] md:max-w-md rounded-lg border border-gray-700/50 shadow-xl">
+        <div class="p-5 md:p-6">
+          <h2 class="text-lg md:text-xl font-medium text-yellow-400 mb-4">How to Play</h2>
+          <div class="space-y-4">
+            <div>
+              <h3 class="font-medium text-yellow-400/80 mb-2">Game Modes</h3>
+              <ul class="space-y-2.5 text-sm text-gray-300">
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>Song Mode: Listen to different parts of the song and guess the title</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>Lyrics Mode: Read the lyrics and guess the song title</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>Singer Mode: Read facts about the singer and guess their name</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 class="font-medium text-yellow-400/80 mb-2">Tips</h3>
+              <ul class="space-y-2.5 text-sm text-gray-300">
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>Pay attention to the year and hints provided</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>Try different parts of the song if you're stuck</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>The Year is in the Ethiopian Calendar</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <button 
+            class="mt-6 w-full bg-yellow-500/90 hover:bg-yellow-500 text-gray-900 py-2.5 rounded-md transition-colors font-medium text-sm md:text-base active:scale-[0.98]"
+            on:click={toggleInstructions}
+          >
+            Got it!
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
+  :global(body) {
+    background-color: #0a0a0a;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   main {
-    color: #eaeaea;
-    background-color: #1c1c1c;
-    font-family: Arial, sans-serif;
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  :global(.card-content) {
-    scrollbar-width: thin;
-    scrollbar-color: #4a4a4a #2d2d2d;
-  }
-
-  :global(.card-content::-webkit-scrollbar) {
-    width: 8px;
-  }
-
-  :global(.card-content::-webkit-scrollbar-track) {
-    background: #2d2d2d;
-  }
-
-  :global(.card-content::-webkit-scrollbar-thumb) {
-    background-color: #4a4a4a;
-    border-radius: 4px;
+    font-family: system-ui, -apple-system, sans-serif;
   }
 
   :global(.scrollarea-viewport) {
@@ -350,13 +466,11 @@
     :global(.scrollarea-viewport) {
       scroll-behavior: smooth;
       overscroll-behavior-y: contain;
-      /* Hide scrollbar for Chrome, Safari and Opera */
       &::-webkit-scrollbar {
         display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;  /* Firefox */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   }
 </style>

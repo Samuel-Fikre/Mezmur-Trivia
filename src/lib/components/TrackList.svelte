@@ -69,34 +69,89 @@
 
 <style>
   .track-list {
-    margin-top: 20px;
-    background-color: black;
-    border-radius: 10px;
-    padding: 20px;
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
 
   .track {
+    background-color: rgba(31, 41, 55, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #666;
+    transition: all 0.2s ease;
+  }
+
+  .track:hover {
+    background-color: rgba(31, 41, 55, 0.5);
+    border-color: rgba(75, 85, 99, 0.4);
   }
 
   .track.active {
-    background-color: #222;
-    color: #00ff00;
+    background-color: rgba(31, 41, 55, 0.6);
+    border-color: rgba(234, 179, 8, 0.3);
+  }
+
+  .track-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .track-icon {
+    opacity: 0.7;
+  }
+
+  .button-container {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .track {
+      padding: 0.625rem 0.875rem;
+    }
   }
 </style>
 
 <div class="track-list">
   {#each tracks as track, index}
     <div class="track {currentTrackIndex === index ? 'active' : ''}">
-      <span>{track.id} - {track.label}</span>
+      <div class="track-label">
+        <span class="track-icon">
+          {#if track.label === "Drums"}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path d="M5.25 3.375c0-1.036.84-1.875 1.875-1.875h9.75c1.036 0 1.875.84 1.875 1.875v17.25c0 1.035-.84 1.875-1.875 1.875h-9.75c-1.036 0-1.875-.84-1.875-1.875V3.375Z" />
+              <path d="m12.75 15.75-3.75-3.75 3.75-3.75" />
+            </svg>
+          {:else if track.label === "Bass"}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path d="M19.952 1.651a.75.75 0 0 1 .298.599V16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 1.088-1.442V6.994l-9 2.572v9.737a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.402-4.909l2.31-.66a1.5 1.5 0 0 0 1.088-1.442V5.25a.75.75 0 0 1 .544-.721l10.5-3a.75.75 0 0 1 .658.122Z" />
+            </svg>
+          {:else if track.label === "Instrument"}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path fill-rule="evenodd" d="M19.952 1.651a.75.75 0 0 1 .298.599V16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 1.088-1.442V6.994l-9 2.572v9.737a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.402-4.909l2.31-.66a1.5 1.5 0 0 0 1.088-1.442V5.25a.75.75 0 0 1 .544-.721l10.5-3a.75.75 0 0 1 .658.122ZM9 7.422V4.3L3.28 5.78a.75.75 0 0 1-.944-.71V2.933A.75.75 0 0 1 2.69 2.18L9 0l7.5 1.5-7.5 2.25V7.422Z" clip-rule="evenodd" />
+            </svg>
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.024-.983a1.125 1.125 0 0 1 0 1.966l-5.603 3.113A1.125 1.125 0 0 1 9 15.113V8.887c0-.857.921-1.4 1.671-.983l5.603 3.113Z" clip-rule="evenodd" />
+            </svg>
+          {/if}
+        </span>
+        <span>{track.label}</span>
+      </div>
       <div class="button-container">
         <Button
-          variant="default"
-          color={currentTrackIndex === index ? "success" : "primary"}
+          variant="ghost"
+          size="sm"
+          class="hover:bg-gray-700/50 hover:text-white {currentTrackIndex === index && isPlaying ? 'text-yellow-400' : 'text-gray-300'}"
           on:click={() => playTrack(index)}
         >
           <svg
@@ -105,7 +160,7 @@
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="size-6"
+            class="w-5 h-5"
           >
             {#if currentTrackIndex === index && isPlaying}
               <path
@@ -129,8 +184,9 @@
         </Button>
         {#if currentTrackIndex === index}
           <Button
-            variant="default"
-            color="secondary"
+            variant="ghost"
+            size="sm"
+            class="hover:bg-gray-700/50 hover:text-white text-gray-300"
             on:click={skipTrack}
           >
             <svg
@@ -139,7 +195,7 @@
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="size-6"
+              class="w-5 h-5"
             >
               <path
                 stroke-linecap="round"
