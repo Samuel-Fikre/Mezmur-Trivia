@@ -315,18 +315,20 @@
       <!-- Game Content -->
       <div class="space-y-4 md:space-y-6 px-2">
         <!-- Info Card -->
-        <div class="glass-card p-3 md:p-4">
-          <div class="grid grid-cols-2 gap-3 md:gap-4">
-            <div>
-              <p class="text-xs text-gray-400/80 mb-0.5 md:mb-1">Year</p>
-              <p class="text-sm md:text-base font-medium">{songInfo?.year || "Unknown"}</p>
-            </div>
-            <div>
-              <p class="text-xs text-gray-400/80 mb-0.5 md:mb-1">Hint</p>
-              <p class="text-sm md:text-base font-medium">{songInfo?.hint || "No hint available"}</p>
+        {#if gameMode === "song"}
+          <div class="glass-card p-3 md:p-4">
+            <div class="grid grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <p class="text-xs text-gray-400/80 mb-0.5 md:mb-1">Year</p>
+                <p class="text-sm md:text-base font-medium">{songInfo?.year || "Unknown"}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400/80 mb-0.5 md:mb-1">Hint</p>
+                <p class="text-sm md:text-base font-medium">{songInfo?.hint || "No hint available"}</p>
+              </div>
             </div>
           </div>
-        </div>
+        {/if}
 
         <!-- Game Interface -->
         {#if gameMode === "song"}
@@ -336,17 +338,21 @@
             {/if}
           </div>
         {:else if gameMode === "lyrics"}
-          {#if currentLyric}
-            <div class="glass-card p-4 md:p-6">
-              <p class="text-base md:text-lg italic text-center text-gray-200/90 leading-relaxed">"{currentLyric}"</p>
-            </div>
-          {/if}
+          <div class="glass-card p-6 md:p-8 text-center">
+            <h3 class="text-lg md:text-xl font-medium text-gradient mb-3">Coming Soon!</h3>
+            <p class="text-sm md:text-base text-gray-300/90">
+              Soon you'll be able to test your knowledge of mezmur lyrics.
+              Stay tuned for this exciting feature!
+            </p>
+          </div>
         {:else}
-          {#if currentSingerFact}
-            <div class="glass-card p-4 md:p-6">
-              <p class="text-base md:text-lg text-center text-gray-200/90 leading-relaxed">{currentSingerFact}</p>
-            </div>
-          {/if}
+          <div class="glass-card p-6 md:p-8 text-center">
+            <h3 class="text-lg md:text-xl font-medium text-gradient mb-3">Coming Soon!</h3>
+            <p class="text-sm md:text-base text-gray-300/90">
+              Get ready to showcase your knowledge about favourite mezmur singers.
+              This feature is currently under development!
+            </p>
+          </div>
         {/if}
 
         <!-- Input Section -->
@@ -461,15 +467,15 @@
               <ul class="space-y-2.5 text-sm text-gray-300/90">
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
-                  <span>Song Mode: Listen to different parts of the song and guess the title</span>
+                  <span>Song Mode: Listen to different instrumental parts (drums, bass, instruments) and guess the mezmur title. Each part reveals different aspects of the song!</span>
                 </li>
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
-                  <span>Lyrics Mode: Read the lyrics and guess the song title</span>
+                  <span>Lyrics Mode (Coming Soon): Challenge yourself by guessing songs from their meaningful lyrics</span>
                 </li>
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
-                  <span>Singer Mode: Read facts about the singer and guess their name</span>
+                  <span>Singer Mode (Coming Soon): Test your knowledge about favourite mezmur singers through interesting facts and their music snippets</span>
                 </li>
               </ul>
             </div>
@@ -478,15 +484,19 @@
               <ul class="space-y-2.5 text-sm text-gray-300/90">
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
-                  <span>Pay attention to the year and hints provided</span>
+                  <span>Pay attention to the year and hints provided - they're valuable clues!</span>
                 </li>
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
-                  <span>Try different parts of the song if you're stuck</span>
+                  <span>Try different parts of the song - sometimes the bass or drums might be the key to recognition</span>
                 </li>
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
-                  <span>The Year is in the Ethiopian Calendar</span>
+                  <span>The Year is in the ian Calendar (EC)</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-yellow-400/60">•</span>
+                  <span>Use the suggestions dropdown to help with exact song titles</span>
                 </li>
               </ul>
             </div>
