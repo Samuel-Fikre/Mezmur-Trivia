@@ -91,12 +91,12 @@
         break;
     }
   }
-
+ 
   async function fetchSongs() {
     try {
       const response = await fetch("http://localhost:3001/api/songs");
       allSongs = await response.json();
-      database = allSongs.filter(song => song.songs && song.songs.length >= 4);
+      database = shuffleArray(allSongs.filter(song => song.songs && song.songs.length >= 4));
     } catch (error) {
       console.error("Error fetching songs:", error);
     }
@@ -107,7 +107,7 @@
       const response = await fetch("http://localhost:3001/api/lyrics-quiz");
       if (!response.ok) throw new Error("Failed to fetch lyrics quiz");
       allSongs = await response.json();
-      database = allSongs;
+      database = shuffleArray(allSongs);
     } catch (error) {
       console.error("Error fetching lyrics quiz:", error);
       toast.error("Failed to load lyrics quiz");
@@ -119,11 +119,21 @@
       const response = await fetch("http://localhost:3001/api/singer-quiz");
       if (!response.ok) throw new Error("Failed to fetch singer quiz");
       allSongs = await response.json();
-      database = allSongs;
+      database = shuffleArray(allSongs);
     } catch (error) {
       console.error("Error fetching singer quiz:", error);
       toast.error("Failed to load singer quiz");
     }
+  }
+
+  // Fisher-Yates shuffle algorithm
+  function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   function loadSong(index: number) {
@@ -242,148 +252,194 @@
   }
 </script>
 
-<main class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white flex flex-col items-center">
-  <div class="w-full max-w-3xl px-4 py-6 md:py-12 mx-auto">
-    <!-- Logo -->
-    <div class="flex justify-center mb-8 md:mb-12">
-      <img 
-        class="w-28 md:w-32 h-14 md:h-16 object-contain opacity-90 hover:opacity-100 transition-opacity" 
-        src="https://utfs.io/f/yh10ZRrvFx0zTfDCd6zA8DEmVxHqsGoO76MB4uYyhUdbvKFN" 
-        alt="Mezmur Trivia"
-      />
+<main class="min-h-screen overflow-x-hidden relative">
+  <!-- Background Elements -->
+  <div class="fixed inset-0 bg-gradient-to-b from-[#2e1065] via-[#4c1d95] to-[#1e1b4b]"></div>
+  <div class="fixed inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-soft-light"></div>
+  
+  <!-- Wave Pattern -->
+  <div class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+    <div class="absolute w-[200%] left-1/2 -translate-x-1/2 wave-container">
+      <img src="/wave.svg" alt="" class="w-full h-auto" />
     </div>
+  </div>
 
-    <!-- Game Header -->
-    <div class="text-center mb-6 md:mb-8 space-y-2">
-      <h1 class="text-xl md:text-2xl font-medium text-yellow-400">
-        {#if gameMode === "song"}
-          Guess the Song
-        {:else if gameMode === "lyrics"}
-          Guess by Lyrics
-        {:else}
-          Know Your Singer
-        {/if}
-      </h1>
-      <p class="text-xs md:text-sm text-gray-400 px-4">
-        {#if gameMode === "song"}
-          Listen to the clips and guess the title of the song!
-        {:else if gameMode === "lyrics"}
-          Read the lyrics and guess the song title!
-        {:else}
-          Read about the singer and guess who it is!
-        {/if}
-      </p>
-    </div>
+  <div class="relative min-h-screen w-full">
+    <div class="w-full max-w-3xl px-4 py-6 md:py-12 mx-auto">
+      <!-- Logo -->
+      <div class="flex justify-center mb-8 md:mb-12 animate-float">
+        <img 
+          class="w-82 md:w-44 h-14 md:h-16 object-contain opacity-90 hover:opacity-100 transition-opacity" 
+          src="https://vo8mu4xic1.ufs.sh/f/yh10ZRrvFx0z0xKjLL3Uzc4F8ydXNomx76YbCtQ29sWrVwel" 
+          alt="Mezmur Trivia"
+        />
+      </div>
 
-    <!-- Game Mode Selector -->
-    <div class="flex flex-wrap justify-center gap-2 mb-6 md:mb-8 px-2">
-      {#each gameModes as mode}
-        <Button
-          variant={gameMode === mode.id ? "default" : "ghost"}
-          size="sm"
-          class="{gameMode === mode.id ? 'bg-yellow-500/90 hover:bg-yellow-500 text-gray-900' : 'text-gray-400 hover:text-white hover:bg-gray-800'} 
-                 transition-all min-w-[120px] md:min-w-[140px] py-2 md:py-2.5 text-sm md:text-base"
-          on:click={() => loadGameMode(mode.id)}
-        >
-          {mode.label}
-        </Button>
-      {/each}
-    </div>
+      <!-- Game Header -->
+      <div class="text-center mb-6 md:mb-8 space-y-2">
+        <h1 class="text-xl md:text-2xl font-medium text-gradient">
+          {#if gameMode === "song"}
+            Guess the Song
+          {:else if gameMode === "lyrics"}
+            Guess by Lyrics
+          {:else}
+            Know Your Singer
+          {/if}
+        </h1>
+        <p class="text-xs md:text-sm text-gray-400/80 px-4">
+          {#if gameMode === "song"}
+            Listen to the clips and guess the title of the song!
+          {:else if gameMode === "lyrics"}
+            Read the lyrics and guess the song title!
+          {:else}
+            Read about the singer and guess who it is!
+          {/if}
+        </p>
+      </div>
 
-    <!-- Game Content -->
-    <div class="space-y-4 md:space-y-6 px-2">
-      <!-- Info Card -->
-      <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-gray-700/50">
-        <div class="grid grid-cols-2 gap-3 md:gap-4">
-          <div>
-            <p class="text-xs text-gray-400 mb-0.5 md:mb-1">Year</p>
-            <p class="text-sm md:text-base font-medium">{songInfo?.year || "Unknown"}</p>
+      <!-- Game Mode Selector -->
+      <div class="flex flex-wrap justify-center gap-2 mb-6 md:mb-8 px-2">
+        {#each gameModes as mode}
+          <Button
+            variant={gameMode === mode.id ? "default" : "ghost"}
+            size="sm"
+            class="{gameMode === mode.id ? 'glass-button bg-white/20' : 'glass-button'} 
+                   transition-all min-w-[120px] md:min-w-[140px] py-2 md:py-2.5 text-sm md:text-base"
+            on:click={() => loadGameMode(mode.id)}
+          >
+            {mode.label}
+          </Button>
+        {/each}
+      </div>
+
+      <!-- Game Content -->
+      <div class="space-y-4 md:space-y-6 px-2">
+        <!-- Info Card -->
+        <div class="glass-card p-3 md:p-4">
+          <div class="grid grid-cols-2 gap-3 md:gap-4">
+            <div>
+              <p class="text-xs text-gray-400/80 mb-0.5 md:mb-1">Year</p>
+              <p class="text-sm md:text-base font-medium">{songInfo?.year || "Unknown"}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400/80 mb-0.5 md:mb-1">Hint</p>
+              <p class="text-sm md:text-base font-medium">{songInfo?.hint || "No hint available"}</p>
+            </div>
           </div>
-          <div>
-            <p class="text-xs text-gray-400 mb-0.5 md:mb-1">Hint</p>
-            <p class="text-sm md:text-base font-medium">{songInfo?.hint || "No hint available"}</p>
+        </div>
+
+        <!-- Game Interface -->
+        {#if gameMode === "song"}
+          <div class="glass-card overflow-hidden">
+            {#if tracks.length > 0}
+              <TrackList {tracks} {songInfo} onBassPlay={handleBassPlay} />
+            {/if}
           </div>
+        {:else if gameMode === "lyrics"}
+          {#if currentLyric}
+            <div class="glass-card p-4 md:p-6">
+              <p class="text-base md:text-lg italic text-center text-gray-200/90 leading-relaxed">"{currentLyric}"</p>
+            </div>
+          {/if}
+        {:else}
+          {#if currentSingerFact}
+            <div class="glass-card p-4 md:p-6">
+              <p class="text-base md:text-lg text-center text-gray-200/90 leading-relaxed">{currentSingerFact}</p>
+            </div>
+          {/if}
+        {/if}
+
+        <!-- Input Section -->
+        <div class="space-y-3">
+          {#if suggestions.length > 0}
+            <ScrollArea class="h-28 md:h-32 glass-card">
+              <div class="p-1">
+                {#each suggestions as suggestion}
+                  <button
+                    class="w-full text-left px-3 py-2.5 md:py-2 text-sm text-gray-300 hover:bg-white/10 active:bg-white/20 rounded-md transition-colors"
+                    on:click={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                {/each}
+              </div>
+            </ScrollArea>
+          {/if}
+
+          <div class="flex gap-2">
+            <Input
+              bind:value={userGuess}
+              placeholder={gameMode === "singer" ? "Enter singer name..." : "Enter song title..."}
+              on:input={handleInput}
+              class="glass-morphism bg-transparent border-white/20 text-white placeholder:text-gray-500 h-11 md:h-12 text-sm md:text-base"
+            />
+            <Button 
+              on:click={handleGuess}
+              class="glass-button px-6 md:px-8 h-11 md:h-12 text-sm md:text-base font-medium"
+            >
+              Guess
+            </Button>
+          </div>
+
+          {#if feedbackMessage}
+            <div class="flex justify-center items-center gap-2 py-2">
+              {#if feedbackMessage === "got"}
+                <div class="flex items-center gap-2 text-green-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-sm md:text-base font-medium">Correct!</span>
+                </div>
+              {:else}
+                <div class="flex items-center gap-2 text-red-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-sm md:text-base font-medium">Try again!</span>
+                </div>
+              {/if}
+            </div>
+          {/if}
         </div>
       </div>
 
-      <!-- Game Interface -->
-      {#if gameMode === "song"}
-        <div class="bg-gray-800/30 rounded-lg overflow-hidden">
-          {#if tracks.length > 0}
-            <TrackList {tracks} {songInfo} onBassPlay={handleBassPlay} />
-          {/if}
-        </div>
-      {:else if gameMode === "lyrics"}
-        {#if currentLyric}
-          <div class="bg-gray-800/30 rounded-lg p-4 md:p-6">
-            <p class="text-base md:text-lg italic text-center text-gray-200 leading-relaxed">"{currentLyric}"</p>
-          </div>
-        {/if}
-      {:else}
-        {#if currentSingerFact}
-          <div class="bg-gray-800/30 rounded-lg p-4 md:p-6">
-            <p class="text-base md:text-lg text-center text-gray-200 leading-relaxed">{currentSingerFact}</p>
-          </div>
-        {/if}
-      {/if}
-
-      <!-- Input Section -->
-      <div class="space-y-3">
-        {#if suggestions.length > 0}
-          <ScrollArea class="h-28 md:h-32 rounded-lg border border-gray-700/50 bg-gray-800/30">
-            <div class="p-1">
-              {#each suggestions as suggestion}
-                <button
-                  class="w-full text-left px-3 py-2.5 md:py-2 text-sm text-gray-300 hover:bg-gray-700/50 active:bg-gray-600/50 rounded-md transition-colors"
-                  on:click={() => handleSuggestionClick(suggestion)}
-                >
-                  {suggestion}
-                </button>
-              {/each}
-            </div>
-          </ScrollArea>
-        {/if}
-
-        <div class="flex gap-2">
-          <Input
-            bind:value={userGuess}
-            placeholder={gameMode === "singer" ? "Enter singer name..." : "Enter song title..."}
-            on:input={handleInput}
-            class="bg-gray-800/30 border-gray-700/50 text-white placeholder:text-gray-500 h-11 md:h-12 text-sm md:text-base"
-          />
-          <Button 
-            on:click={handleGuess}
-            class="bg-yellow-500/90 hover:bg-yellow-500 text-gray-900 px-6 md:px-8 h-11 md:h-12 text-sm md:text-base font-medium"
+      <!-- Pagination -->
+      <div class="mt-8 flex justify-center">
+        <div class="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="glass-button p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentPage === 1}
+            on:click={() => handlePageChange(currentPage - 1)}
           >
-            Guess
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </Button>
+
+          <div class="text-sm text-gray-300/90">
+            {currentPage} / {database.length}
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            class="glass-button p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentPage === database.length}
+            on:click={() => handlePageChange(currentPage + 1)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
           </Button>
         </div>
-
-        {#if feedbackMessage}
-          <div class="flex justify-center items-center gap-2 py-2">
-            {#if feedbackMessage === "got"}
-              <div class="flex items-center gap-2 text-green-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm md:text-base font-medium">Correct!</span>
-              </div>
-            {:else}
-              <div class="flex items-center gap-2 text-red-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm md:text-base font-medium">Try again!</span>
-              </div>
-            {/if}
-          </div>
-        {/if}
       </div>
     </div>
 
     <!-- Help Button -->
     <button 
-      class="fixed bottom-4 md:bottom-6 right-4 md:right-6 bg-gray-800/80 hover:bg-gray-800 text-gray-400 hover:text-white p-2.5 md:p-3 rounded-full backdrop-blur-sm transition-all shadow-lg active:scale-95"
+      class="fixed bottom-4 md:bottom-6 right-4 md:right-6 glass-button p-2.5 md:p-3 backdrop-blur-sm transition-all shadow-lg"
       on:click={toggleInstructions}
       aria-label="Game Instructions"
     >
@@ -396,13 +452,13 @@
   <!-- Instructions Modal -->
   {#if showInstructions}
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-gray-800/90 backdrop-blur-sm w-full max-w-[340px] md:max-w-md rounded-lg border border-gray-700/50 shadow-xl">
+      <div class="glass-card w-full max-w-[340px] md:max-w-md">
         <div class="p-5 md:p-6">
-          <h2 class="text-lg md:text-xl font-medium text-yellow-400 mb-4">How to Play</h2>
+          <h2 class="text-lg md:text-xl font-medium text-gradient mb-4">How to Play</h2>
           <div class="space-y-4">
             <div>
               <h3 class="font-medium text-yellow-400/80 mb-2">Game Modes</h3>
-              <ul class="space-y-2.5 text-sm text-gray-300">
+              <ul class="space-y-2.5 text-sm text-gray-300/90">
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
                   <span>Song Mode: Listen to different parts of the song and guess the title</span>
@@ -419,7 +475,7 @@
             </div>
             <div>
               <h3 class="font-medium text-yellow-400/80 mb-2">Tips</h3>
-              <ul class="space-y-2.5 text-sm text-gray-300">
+              <ul class="space-y-2.5 text-sm text-gray-300/90">
                 <li class="flex gap-2">
                   <span class="text-yellow-400/60">•</span>
                   <span>Pay attention to the year and hints provided</span>
@@ -436,7 +492,7 @@
             </div>
           </div>
           <button 
-            class="mt-6 w-full bg-yellow-500/90 hover:bg-yellow-500 text-gray-900 py-2.5 rounded-md transition-colors font-medium text-sm md:text-base active:scale-[0.98]"
+            class="mt-6 w-full glass-button py-2.5 font-medium text-sm md:text-base"
             on:click={toggleInstructions}
           >
             Got it!
@@ -449,12 +505,7 @@
 
 <style>
   :global(body) {
-    background-color: #0a0a0a;
     -webkit-tap-highlight-color: transparent;
-  }
-
-  main {
-    font-family: system-ui, -apple-system, sans-serif;
   }
 
   :global(.scrollarea-viewport) {
