@@ -94,7 +94,7 @@
  
   async function fetchSongs() {
     try {
-      const response = await fetch("http://localhost:3001/api/songs");
+      const response = await fetch("https://guessmezmur-backend.onrender.com/api/songs");
       allSongs = await response.json();
       database = shuffleArray(allSongs.filter(song => song.songs && song.songs.length >= 4));
     } catch (error) {
